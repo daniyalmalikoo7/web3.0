@@ -32,5 +32,9 @@ Right now, distributed ledger technologies are very popular. After all, they are
             Rapidly build modern websites without ever leaving your HTML.
             A utility-first **CSS framework** packed with classes like flex, pt-4, text-center and rotate-90 that can be composed to build any design, directly in your markup.
 
-Ethers library is going to allow us to interact with blockchain and our smart contract
+        -   Ethers library is going to allow us to interact with blockchain and our smart contract
+
+        - react-icons to make use of required react icons(used in sidebar for mobile view)
  
+
+ Things required to interact with our ethereum smart contract are "ABI (CONTRACT APPLICATION BINARY INTERFACE), contractAddress)
