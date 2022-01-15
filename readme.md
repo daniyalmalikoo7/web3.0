@@ -35,6 +35,7 @@ Right now, distributed ledger technologies are very popular. After all, they are
         -   Ethers library is going to allow us to interact with blockchain and our smart contract
 
         - react-icons to make use of required react icons(used in sidebar for mobile view)
- 
 
- Things required to interact with our ethereum smart contract are "ABI (CONTRACT APPLICATION BINARY INTERFACE), contractAddress)
+Things required to interact with our ethereum smart contract are "ABI (CONTRACT APPLICATION BINARY INTERFACE), contractAddress)
+
+- Transactions has the transaction card component - it includes a gif corresponding to the keyword type (for gif we will use giphy developer api)

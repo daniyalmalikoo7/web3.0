@@ -6,7 +6,7 @@ export const TransactionContext = React.createContext();
 
 const { ethereum } = window; //entire window object to handle our smartcontract and blockchain relation, and we have this due to metamask extension
 
-const getEthereumContract = () => {
+const createEthereumContract = () => {
   const provider = new ethers.providers.Web3Provider(ethereum);
   const signer = provider.getSigner();
   const transactionContract = new ethers.Contract( //fetching our contract
@@ -16,6 +16,7 @@ const getEthereumContract = () => {
   );
 
   console.log({ provider, signer, transactionContract });
+  return transactionContract;
 };
 
 export const TransactionProvider = ({ children }) => {
@@ -30,9 +31,40 @@ export const TransactionProvider = ({ children }) => {
   const [transactionCount, setTransactionCount] = useState(
     localStorage.getItem("transactionCount")
   );
+  const [transactions, setTransactions] = useState([]);
 
   const handleChange = (e, name) => {
     setFormData((prev) => ({ ...prev, [name]: e.target.value }));
+  };
+
+  const getAllTransactions = async () => {
+    try {
+      if (ethereum) {
+        const transactionContract = createEthereumContract();
+
+        const availableTransactions =
+          await transactionContract.getAllTransactions();
+
+        const structeredTransactions = availableTransactions.map(
+          (transaction) => ({
+            addressTo: transaction.reciever,
+            addressFrom: transaction.sender,
+            timestamp: new Date(
+              transaction.timestamp.toNumber() * 1000
+            ).toLocaleString(),
+            message: transaction.message,
+            keyword: transaction.keyword,
+            amount: parseInt(transaction.amount._hex) / 10 ** 18, //this amount is in ethereum gwei, to convert it we need to multiply it by 10^18
+          })
+        );
+
+        setTransactions(structeredTransactions);
+      } else {
+        console.log("ethereum is not found");
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const checkIfWalletIsConnected = async () => {
@@ -43,12 +75,25 @@ export const TransactionProvider = ({ children }) => {
       if (accounts.length) {
         setCurrentAccount(accounts[0]);
 
-        //getAllTransactions();
+        getAllTransactions();
       } else {
         console.log("No accounts found");
       }
     } catch (e) {
       console.log(e);
+      throw new Error("No Etherium Object.");
+    }
+  };
+
+  const checkIfTransactionsExist = async () => {
+    try {
+      const transactionContract = createEthereumContract();
+      const currentTransactionCount =
+        await transactionContract.getTransactionCount();
+      console.log(currentTransactionCount);
+      window.localStorage.setItem("transactionCount", currentTransactionCount);
+    } catch (error) {
+      console.log(error.message);
       throw new Error("No Etherium Object.");
     }
   };
@@ -71,7 +116,7 @@ export const TransactionProvider = ({ children }) => {
       if (!ethereum) return alert("Please install metamask!");
 
       const { addressTo, amount, keyword, message } = formData;
-      const transactionContract = getEthereumContract();
+      const transactionContract = createEthereumContract();
       const parsedAmount = ethers.utils.parseEther(amount); //parses decimal amount into GWEI hexadecimal amount
 
       //sending ethereum from one address to another
@@ -103,6 +148,8 @@ export const TransactionProvider = ({ children }) => {
 
       const transactionCount = await transactionContract.getTransactionCount();
       setTransactionCount(transactionCount.toNumber());
+
+      location.reload();
     } catch (error) {
       console.log(error);
       throw new Error("No Etherium Object.");
@@ -111,6 +158,7 @@ export const TransactionProvider = ({ children }) => {
 
   useEffect(() => {
     checkIfWalletIsConnected();
+    checkIfTransactionsExist();
   }, []);
 
   return (
@@ -120,8 +168,10 @@ export const TransactionProvider = ({ children }) => {
         currentAccount,
         formData,
         setFormData,
+        isLoading,
         handleChange,
         sendTransaction,
+        transactions,
       }}
     >
       {children}
